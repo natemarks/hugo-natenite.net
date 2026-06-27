@@ -2,5 +2,5 @@
 
 /* Make homepage h1 title use primary theme color */
 .page-home .intro h1 {
-  color: $primary !important;
+  color: #4682B4 !important;
 }
