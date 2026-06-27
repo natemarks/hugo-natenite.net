@@ -8,8 +8,6 @@ intro_image_absolute_offset: "auto auto -100px -80px" # used to tweak the positi
 intro_image_hide_on_mobile: true
 ---
 
-# natenite.net
+# Experts in AWS Governance and Support
 
-Contact us if: 
- - You need experts in AWS governance.
- - You need to augment your operations team's on-call rotation
+on-site and on-call
