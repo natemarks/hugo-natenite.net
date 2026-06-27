@@ -38,5 +38,6 @@ Scripts for deployment should be in `scripts/`.
 ## Configuration
 
 - Base URL and theme set in `config.toml`
-- Primary color: `#f24088`
+- Primary color: `#4682B4`
+- Complementary color: `#B47846`
 - Fonts: Playfair Display (headings), Source Sans Pro (body)
