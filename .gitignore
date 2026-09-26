@@ -5,6 +5,13 @@ public/
 resources/_gen/
 .hugo_build.lock
 
+# Generated from data/events.json by scripts/sync_calendar.py
+static/events.ics
+
+# Python
+__pycache__/
+*.pyc
+
 # OS files
 .DS_Store
 Thumbs.db

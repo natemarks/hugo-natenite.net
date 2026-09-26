@@ -1,0 +1,18 @@
+{
+  "_schema": {
+    "id": "Stable identifier for this event. Never shown in the calendar UI -- carried through to the generated .ics VEVENT's UID so a later sync can recognize 'this is the same event' across edits.",
+    "title": "Event name (ICS SUMMARY).",
+    "location": "Address or venue text (ICS LOCATION).",
+    "notes": "Free text: description, contact, price, etc. (ICS DESCRIPTION).",
+    "recurrenceType": "'weekly' or 'once'.",
+    "dayOfWeek": "Required when recurrenceType is 'weekly'. RRULE BYDAY code: MO, TU, WE, TH, FR, SA, SU.",
+    "startDate": "Required when recurrenceType is 'weekly'. First occurrence, YYYY-MM-DD.",
+    "endDate": "Required when recurrenceType is 'weekly'. Last occurrence (RRULE UNTIL bound), YYYY-MM-DD.",
+    "date": "Required when recurrenceType is 'once'. YYYY-MM-DD.",
+    "startTime": "HH:MM, 24-hour.",
+    "endTime": "HH:MM, 24-hour.",
+    "timezone": "IANA timezone name, e.g. America/New_York.",
+    "_seeAlso": "data/events.example.json has worked examples of both recurrenceTypes."
+  },
+  "events": []
+}

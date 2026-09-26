@@ -29,6 +29,7 @@
     <div class="col-12">
       <h1 class="title">{{ .Title }}</h1>
       <div id="calendar"></div>
+      <div id="event-details" class="mt-4"></div>
     </div>
   </div>
 </div>
@@ -53,8 +54,24 @@
 <script defer>
   document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
+    var detailsEl = document.getElementById('event-details');
     var calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'dayGridMonth'
+      initialView: 'dayGridMonth',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: ''
+      },
+      events: { url: '{{ "events.ics" | relURL }}', format: 'ics' },
+      eventClick: function (info) {
+        info.jsEvent.preventDefault();
+        var event = info.event;
+        var parts = [event.title];
+        if (event.extendedProps.location) parts.push(event.extendedProps.location);
+        parts.push(event.start.toLocaleString());
+        if (event.extendedProps.description) parts.push(event.extendedProps.description);
+        detailsEl.textContent = parts.join(' — ');
+      }
     });
     calendar.render();
   });
