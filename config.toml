@@ -13,19 +13,19 @@ title = "NateNite"
   # In most cases you will only want to set the google_analytics_id OR the google_tag_manager_id. If you have Google Analytics included in your GTM tags don't put your GA ID here. Otherwise your data might be useless.
   google_analytics_id = ""
   google_tag_manager_id = ""
-  favicon = "favicon-32x32.svg"
+  favicon = "favicon-32x32.png"
 
   [params.homepage]
     sticky_header = true
-    show_contact_box = true      # show / hide the contaxt box on the homepage
+    show_contact_box = false     # show / hide the contaxt box on the homepage
     show_services_button = false # show / hide the "view all services" button
 
   [params.logo]
-    mobile = "images/logo/logo-mobile.svg"
+    mobile = "images/logo/logo-mobile.png"
     mobile_height = "36px"
-    desktop = "images/logo/logo.svg"
+    desktop = "images/logo/logo.png"
     desktop_height = "36px"
-    alt = "Serif - A Hugo Business Theme"
+    alt = "NateNite"
 
   [params.fonts]
     # sets the google font link in layouts/partials/google-fonts.html
@@ -34,7 +34,7 @@ title = "NateNite"
     base = "Source Sans Pro"
 
   [params.colors]
-    primary = "#f24088"
+    primary = "#4682B4"
     black = "#2f2f41"
     white = "#ffffff"
     white_offset = "#f6f7ff"

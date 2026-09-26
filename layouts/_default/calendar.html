@@ -1,0 +1,125 @@
+{{ define "body_classes" }}page-calendar{{ end }}
+
+{{ define "header_css" }}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/skeleton.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/themes/classic/theme.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/themes/classic/palette.css" rel="stylesheet">
+{{/*
+  Classic theme's palette.css exposes these as :root custom properties
+  (see its own source). Overriding them here, after that stylesheet loads,
+  reskins the calendar in the site's own colors (config.toml params.colors)
+  instead of FullCalendar's stock blue.
+*/}}
+<style>
+  :root {
+    --fc-classic-primary: {{ .Site.Params.colors.primary }};
+    --fc-classic-primary-foreground: {{ .Site.Params.colors.white }};
+    --fc-classic-button: {{ .Site.Params.colors.primary }};
+    --fc-classic-button-border: {{ .Site.Params.colors.primary }};
+    --fc-classic-button-strong: #B47846;
+    --fc-classic-button-strong-border: #B47846;
+    --fc-classic-today: #B4784626;
+  }
+</style>
+{{ end }}
+
+{{ define "main" }}
+<div class="container pb-6 pt-6 pt-md-14 pb-md-14">
+  <div class="row justify-content-start">
+    <div class="col-12">
+      <h1 class="title">{{ .Title }}</h1>
+      <div id="calendar"></div>
+      <div id="event-details" class="mt-4"></div>
+    </div>
+  </div>
+</div>
+{{ end }}
+
+{{ define "footer_js" }}
+{{/*
+  @fullcalendar/icalendar's global build expects a pre-existing global `ICAL`
+  (from ical.js) at script-execution time. ical.js ships only ESM/CJS builds
+  (no UMD/global bundle), so it's imported as a module and assigned to
+  `window.ICAL` here. Module scripts and `defer`red classic scripts both run
+  after HTML parsing, in document order, so this import is guaranteed to run
+  before the icalendar plugin script below.
+*/}}
+<script type="module">
+  import ICAL from 'https://cdn.jsdelivr.net/npm/ical.js@2.2.1/dist/ical.js';
+  window.ICAL = ICAL;
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/all/global.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/themes/classic/global.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@fullcalendar/icalendar@7.1.0/global.js"></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function () {
+    var calendarEl = document.getElementById('calendar');
+    var detailsEl = document.getElementById('event-details');
+
+    // Appends `text` to `container`, turning any http(s) URL within it into
+    // a real clickable <a> -- handles a URL standing alone (e.g. location)
+    // or mixed in with other text (e.g. "See https://... for rules.").
+    function appendLinkified(container, text) {
+      var urlPattern = /https?:\/\/\S+/g;
+      var lastIndex = 0;
+      var match;
+      while ((match = urlPattern.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          container.append(text.slice(lastIndex, match.index));
+        }
+        var url = match[0];
+        var trailing = (url.match(/[.,;:!?)\]]+$/) || [''])[0];
+        if (trailing) {
+          url = url.slice(0, url.length - trailing.length);
+        }
+        var link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = url;
+        container.appendChild(link);
+        if (trailing) container.append(trailing);
+        lastIndex = match.index + match[0].length;
+      }
+      if (lastIndex < text.length) {
+        container.append(text.slice(lastIndex));
+      }
+    }
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      height: 'auto',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,listWeek'
+      },
+      events: { url: '{{ "events.ics" | relURL }}', format: 'ics' },
+      eventClick: function (info) {
+        info.jsEvent.preventDefault();
+        var event = info.event;
+        detailsEl.textContent = '';
+
+        var titleEl = document.createElement('strong');
+        titleEl.textContent = event.title;
+        detailsEl.appendChild(titleEl);
+
+        var location = event.extendedProps.location;
+        if (location) {
+          detailsEl.append(' — ');
+          appendLinkified(detailsEl, location);
+        }
+
+        detailsEl.append(' — ' + event.start.toLocaleString());
+
+        var description = event.extendedProps.description;
+        if (description) {
+          detailsEl.append(' — ');
+          appendLinkified(detailsEl, description);
+        }
+      }
+    });
+    calendar.render();
+  });
+</script>
+{{ end }}
