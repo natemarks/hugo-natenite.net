@@ -67,11 +67,33 @@
       eventClick: function (info) {
         info.jsEvent.preventDefault();
         var event = info.event;
-        var parts = [event.title];
-        if (event.extendedProps.location) parts.push(event.extendedProps.location);
-        parts.push(event.start.toLocaleString());
-        if (event.extendedProps.description) parts.push(event.extendedProps.description);
-        detailsEl.textContent = parts.join(' — ');
+        detailsEl.textContent = '';
+
+        var titleEl = document.createElement('strong');
+        titleEl.textContent = event.title;
+        detailsEl.appendChild(titleEl);
+
+        var location = event.extendedProps.location;
+        if (location) {
+          detailsEl.append(' — ');
+          if (/^https?:\/\//i.test(location)) {
+            var link = document.createElement('a');
+            link.href = location;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = location;
+            detailsEl.appendChild(link);
+          } else {
+            detailsEl.append(location);
+          }
+        }
+
+        detailsEl.append(' — ' + event.start.toLocaleString());
+
+        var description = event.extendedProps.description;
+        if (description) {
+          detailsEl.append(' — ' + description);
+        }
       }
     });
     calendar.render();

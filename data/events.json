@@ -2,7 +2,7 @@
   "_schema": {
     "id": "Stable identifier for this event. Never shown in the calendar UI -- carried through to the generated .ics VEVENT's UID so a later sync can recognize 'this is the same event' across edits.",
     "title": "Event name (ICS SUMMARY).",
-    "location": "Address or venue text (ICS LOCATION).",
+    "location": "Address or venue text (ICS LOCATION). If it's an http(s) URL (e.g. a Google Maps link), the calendar page renders it as a clickable link instead of plain text.",
     "notes": "Free text: description, contact, price, etc. (ICS DESCRIPTION).",
     "recurrenceType": "'weekly' or 'once'.",
     "dayOfWeek": "Required when recurrenceType is 'weekly'. RRULE BYDAY code: MO, TU, WE, TH, FR, SA, SU.",
