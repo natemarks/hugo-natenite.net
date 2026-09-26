@@ -15,6 +15,7 @@ it into data/events.json's real "events" array to publish them.
 
 Usage: python3 scripts/sync_calendar.py
 """
+
 import json
 import sys
 from datetime import datetime, timezone
@@ -28,6 +29,7 @@ UID_DOMAIN = "natenite.net"
 
 
 def escape_ics_text(value):
+    """Escape RFC 5545 TEXT special characters: backslash, comma, semicolon, newline."""
     return (
         value.replace("\\", "\\\\")
         .replace(",", "\\,")
@@ -37,6 +39,7 @@ def escape_ics_text(value):
 
 
 def format_datetime(date_str, time_str):
+    """Combine YYYY-MM-DD and HH:MM into an ICS local DATE-TIME value."""
     return date_str.replace("-", "") + "T" + time_str.replace(":", "") + "00"
 
 
@@ -51,6 +54,7 @@ def until_utc(end_date_str, tzid):
 
 
 def build_vevent(event, dtstamp):
+    """Build the ICS lines for a single event's VEVENT block."""
     recurrence_type = event["recurrenceType"]
     if recurrence_type == "weekly":
         start_date = event["startDate"]
@@ -72,7 +76,9 @@ def build_vevent(event, dtstamp):
 
     if recurrence_type == "weekly":
         until = until_utc(event["endDate"], tzid)
-        lines.append(f"RRULE:FREQ=WEEKLY;BYDAY={event['dayOfWeek']};UNTIL={until}")
+        lines.append(
+            f"RRULE:FREQ=WEEKLY;BYDAY={event['dayOfWeek']};UNTIL={until}"
+        )
 
     lines += [
         f"SUMMARY:{escape_ics_text(event['title'])}",
@@ -106,6 +112,8 @@ def build_ics(events):
 
 
 def main():
+    """Regenerate static/events.ics from data/events.json. Returns a process
+    exit code: 0 if every event synced cleanly, 1 if any were skipped."""
     data = json.loads(EVENTS_PATH.read_text())
     events = data["events"]
     ics_text, included, skipped = build_ics(events)
@@ -114,8 +122,7 @@ def main():
     print(f"Wrote {included} event(s) to {OUTPUT_PATH.relative_to(REPO_ROOT)}")
     for event_id, err in skipped:
         print(f"Skipped event {event_id!r}: {err}", file=sys.stderr)
-    if skipped:
-        return 1
+    return 1 if skipped else 0
 
 
 if __name__ == "__main__":

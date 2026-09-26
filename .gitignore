@@ -11,6 +11,9 @@ static/events.ics
 # Python
 __pycache__/
 *.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
 
 # OS files
 .DS_Store
