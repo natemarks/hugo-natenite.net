@@ -5,7 +5,7 @@ BUCKET="natenite-production-site-content"
 PUBLIC_DIR="public"
 
 echo "Building site..."
-hugo --minify
+hugo --minify --cleanDestinationDir
 
 echo "Deploying to s3://${BUCKET}..."
 aws s3 sync "${PUBLIC_DIR}/" "s3://${BUCKET}/" \

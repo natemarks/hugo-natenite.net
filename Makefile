@@ -14,7 +14,7 @@ sync-calendar: ## Regenerate static/events.ics from data/events.json
 	python3 scripts/sync_calendar.py
 
 build: sync-calendar ## Build the Hugo site
-	hugo --minify
+	hugo --minify --cleanDestinationDir
 
 serve: sync-calendar ## Run local development server
 	hugo server -D
