@@ -1,0 +1,45 @@
+{{ define "body_classes" }}page-calendar{{ end }}
+
+{{ define "header_css" }}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/skeleton.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/themes/classic/theme.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/themes/classic/palette.css" rel="stylesheet">
+{{ end }}
+
+{{ define "main" }}
+<div class="container pb-6 pt-6 pt-md-14 pb-md-14">
+  <div class="row justify-content-start">
+    <div class="col-12">
+      <h1 class="title">{{ .Title }}</h1>
+      <div id="calendar"></div>
+    </div>
+  </div>
+</div>
+{{ end }}
+
+{{ define "footer_js" }}
+{{/*
+  @fullcalendar/icalendar's global build expects a pre-existing global `ICAL`
+  (from ical.js) at script-execution time. ical.js ships only ESM/CJS builds
+  (no UMD/global bundle), so it's imported as a module and assigned to
+  `window.ICAL` here. Module scripts and `defer`red classic scripts both run
+  after HTML parsing, in document order, so this import is guaranteed to run
+  before the icalendar plugin script below.
+*/}}
+<script type="module">
+  import ICAL from 'https://cdn.jsdelivr.net/npm/ical.js@2.2.1/dist/ical.js';
+  window.ICAL = ICAL;
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/all/global.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/themes/classic/global.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@fullcalendar/icalendar@7.1.0/global.js"></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function () {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth'
+    });
+    calendar.render();
+  });
+</script>
+{{ end }}
