@@ -55,6 +55,37 @@
   document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
     var detailsEl = document.getElementById('event-details');
+
+    // Appends `text` to `container`, turning any http(s) URL within it into
+    // a real clickable <a> -- handles a URL standing alone (e.g. location)
+    // or mixed in with other text (e.g. "See https://... for rules.").
+    function appendLinkified(container, text) {
+      var urlPattern = /https?:\/\/\S+/g;
+      var lastIndex = 0;
+      var match;
+      while ((match = urlPattern.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          container.append(text.slice(lastIndex, match.index));
+        }
+        var url = match[0];
+        var trailing = (url.match(/[.,;:!?)\]]+$/) || [''])[0];
+        if (trailing) {
+          url = url.slice(0, url.length - trailing.length);
+        }
+        var link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = url;
+        container.appendChild(link);
+        if (trailing) container.append(trailing);
+        lastIndex = match.index + match[0].length;
+      }
+      if (lastIndex < text.length) {
+        container.append(text.slice(lastIndex));
+      }
+    }
+
     var calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'dayGridMonth',
       height: 'auto',
@@ -76,23 +107,15 @@
         var location = event.extendedProps.location;
         if (location) {
           detailsEl.append(' — ');
-          if (/^https?:\/\//i.test(location)) {
-            var link = document.createElement('a');
-            link.href = location;
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            link.textContent = location;
-            detailsEl.appendChild(link);
-          } else {
-            detailsEl.append(location);
-          }
+          appendLinkified(detailsEl, location);
         }
 
         detailsEl.append(' — ' + event.start.toLocaleString());
 
         var description = event.extendedProps.description;
         if (description) {
-          detailsEl.append(' — ' + description);
+          detailsEl.append(' — ');
+          appendLinkified(detailsEl, description);
         }
       }
     });
