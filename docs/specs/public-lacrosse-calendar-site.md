@@ -56,13 +56,26 @@ GroupMe bot-posting is explicitly out of scope for this spec (see Out of Scope) 
 
 - **Hosting**: a Hugo static site (any static host works — GitHub Pages, Cloudflare Pages, and Netlify were all confirmed to have usable free tiers with no backend requirement). The calendar page is a Hugo template/content page; the generated `.ics` file is served via Hugo's `static/` directory passthrough — anything placed in a Hugo project's `static/` directory is copied as-is to the site root on build (e.g. `static/events.ics` → `https://<site>/events.ics`), confirmed directly in Hugo's own documentation.
 
-- **Calendar rendering — FullCalendar**: use FullCalendar's core bundle plus its first-party `@fullcalendar/icalendar` plugin (npm description: "Display events from a public iCalendar feed"), loaded via CDN `<script>` tags rather than npm/a bundler:
+- **Calendar rendering — FullCalendar**: use FullCalendar's core bundle plus its first-party `@fullcalendar/icalendar` plugin (npm description: "Display events from a public iCalendar feed"), loaded via CDN `<script>`/`<link>` tags rather than npm/a bundler:
 
   ```html
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/all/global.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/icalendar@7.1.0/index.global.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/skeleton.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/themes/classic/theme.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/themes/classic/palette.css" rel="stylesheet">
+
   <div id="calendar"></div>
-  <script>
+
+  <script type="module">
+    // @fullcalendar/icalendar's global build expects a pre-existing global `ICAL`
+    // (from ical.js). ical.js ships ESM/CJS only (no UMD/global bundle), so it's
+    // imported as a module and assigned to window.ICAL here.
+    import ICAL from 'https://cdn.jsdelivr.net/npm/ical.js@2.2.1/dist/ical.js';
+    window.ICAL = ICAL;
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/all/global.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/themes/classic/global.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@fullcalendar/icalendar@7.1.0/global.js"></script>
+  <script defer>
     document.addEventListener('DOMContentLoaded', function () {
       var calendarEl = document.getElementById('calendar');
       var calendar = new FullCalendar.Calendar(calendarEl, {
@@ -74,7 +87,9 @@ GroupMe bot-posting is explicitly out of scope for this spec (see Out of Scope) 
   </script>
   ```
 
-  Both `fullcalendar` and `@fullcalendar/icalendar` are MIT-licensed (confirmed via their npm registry `license` fields, v7.1.0) — this is distinct from FullCalendar's separately-licensed Premium/Scheduler bundle (resource/timeline views, cross-resource drag-and-drop), which carries a commercial or CC-BY-NC-ND license depending on use case and is **not needed** for a simple read-only events list; do not add it. No Node.js, npm, or bundler is required to ship the site itself — pin the version (e.g. `7.1.0` above) rather than tracking `@latest`, to avoid an untested library update silently breaking the public page.
+  **Corrected from an earlier draft of this spec**: the previously-listed plugin path `@fullcalendar/icalendar@7.1.0/index.global.min.js` does not exist (404s on jsDelivr) — the real path is `@fullcalendar/icalendar@7.1.0/global.js`. Also, FullCalendar v7 changed its rendering internals to use hashed, scoped CSS class names with no auto-injected styles and no bundled recurrence/ICS parser: a theme (`skeleton.css` + a `themes/<name>/theme.css` + `themes/<name>/palette.css`, e.g. the `classic` theme above) must be loaded explicitly or the calendar renders as an unstyled list, and the `@fullcalendar/icalendar` plugin's global build requires a global `ICAL` (from `ical.js`) to already exist when its script executes — since `ical.js` no longer ships a UMD/global build, it must be loaded via a `type="module"` import and assigned to `window.ICAL`, ordered (via `defer`/module semantics) before the plugin script runs. All of this was verified directly against jsDelivr during Phase 1 implementation, not assumed from documentation.
+
+  Both `fullcalendar` and `@fullcalendar/icalendar` are MIT-licensed (confirmed via their npm registry `license` fields, v7.1.0) — this is distinct from FullCalendar's separately-licensed Premium/Scheduler bundle (resource/timeline views, cross-resource drag-and-drop), which carries a commercial or CC-BY-NC-ND license depending on use case and is **not needed** for a simple read-only events list; do not add it. No Node.js, npm, or bundler is required to ship the site itself — pin every version above (`7.1.0`, `2.2.1`) rather than tracking `@latest`, to avoid an untested library update silently breaking the public page.
 
   Documented limitation to design around: FullCalendar's ICS plugin fetches the feed once per page load, not via live polling (per FullCalendar's own docs) — acceptable given how infrequently this data changes, but it means a page left open in a background tab won't pick up a same-session update.
 
