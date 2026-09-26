@@ -4,6 +4,23 @@
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/skeleton.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/themes/classic/theme.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/themes/classic/palette.css" rel="stylesheet">
+{{/*
+  Classic theme's palette.css exposes these as :root custom properties
+  (see its own source). Overriding them here, after that stylesheet loads,
+  reskins the calendar in the site's own colors (config.toml params.colors)
+  instead of FullCalendar's stock blue.
+*/}}
+<style>
+  :root {
+    --fc-classic-primary: {{ .Site.Params.colors.primary }};
+    --fc-classic-primary-foreground: {{ .Site.Params.colors.white }};
+    --fc-classic-button: {{ .Site.Params.colors.primary }};
+    --fc-classic-button-border: {{ .Site.Params.colors.primary }};
+    --fc-classic-button-strong: #B47846;
+    --fc-classic-button-strong-border: #B47846;
+    --fc-classic-today: #B4784626;
+  }
+</style>
 {{ end }}
 
 {{ define "main" }}
