@@ -2,7 +2,7 @@
 SHELL := $(shell which bash)
 PYTHON_VERSION := 3.13.7
 
-.PHONY: help build serve deploy clean check sync-calendar \
+.PHONY: help build serve deploy publish clean check sync-calendar \
 	black black-check pylint mypy shellcheck \
 	unit unit-update-golden integration static static-check \
 	clean-cache clean-venv
@@ -21,6 +21,9 @@ serve: sync-calendar ## Run local development server
 
 deploy: check build ## Deploy site to S3 bucket
 	./scripts/deploy.sh
+
+publish: sync-calendar check build deploy ## Sync calendar data, verify, build, and deploy -- one-shot
+	@echo "✓ Published"
 
 clean: ## Remove generated files
 	rm -rf public resources static/events.ics
