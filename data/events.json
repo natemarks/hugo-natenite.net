@@ -14,5 +14,32 @@
     "timezone": "IANA timezone name, e.g. America/New_York.",
     "_seeAlso": "data/events.example.json has worked examples of both recurrenceTypes."
   },
-  "events": []
+  "events": [
+    {
+      "id": "swanzey-nh-pickup-tuesdays",
+      "title": "Pickup at Fieldhouse in Swanzey NH",
+      "location": "https://maps.app.goo.gl/t3bHYqM94xGmUHdy7",
+      "notes": "$80 for 8-week. $15 for drop in.",
+      "recurrenceType": "weekly",
+      "dayOfWeek": "TU",
+      "startDate": "2026-09-22",
+      "endDate": "2026-11-10",
+      "startTime": "20:00",
+      "endTime": "21:00",
+      "timezone": "America/New_York"
+    },
+    {
+      "id": "bedford-nh-box-pickup-weekly",
+      "title": "Box Lacrosse Pickup",
+      "location": "https://maps.app.goo.gl/cB5kfmwR2woCwj6k9",
+      "notes": "pickup runs until league starts. use pickup to join a roster",
+      "recurrenceType": "weekly",
+      "dayOfWeek": "TU",
+      "startDate": "2026-09-22",
+      "endDate": "2026-11-10",
+      "startTime": "20:00",
+      "endTime": "21:00",
+      "timezone": "America/New_York"
+    }
+  ]
 }
