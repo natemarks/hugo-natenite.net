@@ -43,6 +43,75 @@ def format_datetime(date_str, time_str):
     return date_str.replace("-", "") + "T" + time_str.replace(":", "") + "00"
 
 
+def fold_ics_line(line):
+    """Fold a single ICS content line per RFC 5545 3.1: lines over 75
+    octets are split across multiple physical lines, each continuation
+    line prefixed with a single space, without ever splitting a
+    multi-byte UTF-8 character across the boundary."""
+    encoded = line.encode("utf-8")
+    if len(encoded) <= 75:
+        return line
+
+    chunks = []
+    start = 0
+    limit = 75
+    while start < len(encoded):
+        end = min(start + limit, len(encoded))
+        while start < end < len(encoded) and (encoded[end] & 0xC0) == 0x80:
+            end -= 1
+        chunks.append(encoded[start:end].decode("utf-8"))
+        start = end
+        limit = 74  # continuation lines lose one octet to the leading space
+    return "\r\n ".join(chunks)
+
+
+class ICSValidationError(Exception):
+    """Raised when generated ICS output fails structural validation."""
+
+
+def validate_ics(ics_text):
+    """Structurally validate generated ICS text before it's written --
+    a bug in the generator should fail loudly, not silently publish a
+    broken feed. Checks balanced BEGIN/END pairs and that every VEVENT
+    carries its required fields; this is not a full RFC 5545 parser."""
+    lines = ics_text.split("\r\n")
+    if lines and lines[-1] == "":
+        lines.pop()
+
+    if not lines or lines[0] != "BEGIN:VCALENDAR":
+        raise ICSValidationError("Missing BEGIN:VCALENDAR as the first line")
+    if lines[-1] != "END:VCALENDAR":
+        raise ICSValidationError("Missing END:VCALENDAR as the last line")
+
+    required_vevent_fields = ("UID:", "DTSTAMP:", "DTSTART", "SUMMARY:")
+    in_vevent = False
+    vevent_lines = []
+    for line in lines:
+        if line == "BEGIN:VEVENT":
+            if in_vevent:
+                raise ICSValidationError(
+                    "Nested BEGIN:VEVENT without a matching END:VEVENT"
+                )
+            in_vevent = True
+            vevent_lines = []
+        elif line == "END:VEVENT":
+            if not in_vevent:
+                raise ICSValidationError(
+                    "END:VEVENT without a matching BEGIN:VEVENT"
+                )
+            for field in required_vevent_fields:
+                if not any(l.startswith(field) for l in vevent_lines):
+                    raise ICSValidationError(
+                        f"VEVENT missing required field {field!r}"
+                    )
+            in_vevent = False
+        elif in_vevent:
+            vevent_lines.append(line)
+
+    if in_vevent:
+        raise ICSValidationError("BEGIN:VEVENT without a matching END:VEVENT")
+
+
 def until_utc(end_date_str, tzid):
     """RRULE's UNTIL must be a real UTC instant -- convert local end-of-day
     in the event's own timezone, rather than treating the local date as if
@@ -108,20 +177,31 @@ def build_ics(events):
         except (KeyError, ValueError) as err:
             skipped.append((event.get("id", "<no id>"), err))
     lines.append("END:VCALENDAR")
-    return "\r\n".join(lines) + "\r\n", included, skipped
+    folded = "\r\n".join(fold_ics_line(line) for line in lines) + "\r\n"
+    return folded, included, skipped
 
 
 def main():
     """Regenerate static/events.ics from data/events.json. Returns a process
-    exit code: 0 if every event synced cleanly, 1 if any were skipped."""
+    exit code: 0 if every event synced cleanly, 1 if any were skipped, 2 if
+    the generated output failed structural validation (nothing is written
+    in that case -- a bug in the generator must not overwrite a good feed
+    with a broken one)."""
     data = json.loads(EVENTS_PATH.read_text())
     events = data["events"]
     ics_text, included, skipped = build_ics(events)
+
+    try:
+        validate_ics(ics_text)
+    except ICSValidationError as err:
+        print(f"Refusing to write invalid ICS output: {err}", file=sys.stderr)
+        return 2
+
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.write_text(ics_text)
     print(f"Wrote {included} event(s) to {OUTPUT_PATH.relative_to(REPO_ROOT)}")
-    for event_id, err in skipped:
-        print(f"Skipped event {event_id!r}: {err}", file=sys.stderr)
+    for event_id, skip_err in skipped:
+        print(f"Skipped event {event_id!r}: {skip_err}", file=sys.stderr)
     return 1 if skipped else 0
 
 
